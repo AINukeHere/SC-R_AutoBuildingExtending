@@ -1,0 +1,5 @@
+[main]
+input:  basemap/all_dirt.scx
+output: basemap/all_dirt_out.scx
+
+[main.py]
