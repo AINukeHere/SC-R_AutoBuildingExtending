@@ -4,6 +4,7 @@ chkt = GetChkTokenized()
 MTXM = bytearray(chkt.getsection('MTXM'))
 
 tileDB = EUDArray(0x1000)
+tileCV5 = []
 def init():
     DoActions([
         CreateUnit(1,"Terran Marine","Location 0",P1),
@@ -30,4 +31,13 @@ def init():
             tileDB[i << 1] = -1
     f_simpleprint(X,Y)
     
-    
+
+def main():
+    f = open('tileset/jungle.cv5','rb')
+    while True:
+        obj = f.read(52)
+        if len(obj) < 52:
+            print('end of file : ' , len(obj))
+            break
+        tileCV5.append(obj)
+    print(len(tileCV5))

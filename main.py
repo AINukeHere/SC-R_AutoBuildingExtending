@@ -1,6 +1,8 @@
 from eudplib import * 
 import TileManager
 
+TileManager.main()
+
 def onPluginStart():
     TileManager.init()
     pass
