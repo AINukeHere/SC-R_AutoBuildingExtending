@@ -54,7 +54,11 @@ def VisualizingTileDB(start,end):
             SetMemory(0x58DC68, SetTo, X+32),
             SetMemory(0x58DC6C, SetTo, Y+32),
         ])
-        if EUDIf()(EUDSCAnd()((tileDBforInGame[i] & 0x02) != 0)(tileDBforInGame[i] & 0x01 != 0)()):
+        if EUDIf()((tileDBforInGame[i] & 0x04) != 0):
+            DoActions([
+                CreateUnit(1,"Zerg Scourge","Location 0", P1),
+            ])
+        if EUDElseIf()(EUDSCAnd()((tileDBforInGame[i] & 0x02) != 0)(tileDBforInGame[i] & 0x01 != 0)()):
             DoActions([
                 CreateUnit(1,"Gui Montag","Location 0", P1),
             ])
@@ -63,17 +67,30 @@ def VisualizingTileDB(start,end):
                 CreateUnit(1,"Jim Raynor (Marine)","Location 0", P1),
             ])
         EUDEndIf()
+        
+
         DoActions([
             KillUnit(EncodeUnit("Jim Raynor (Marine)"),P1),
             KillUnit(EncodeUnit("Gui Montag"),P1),
+            KillUnit(EncodeUnit("Zerg Scourge"),P1),
         ])
         i+=1
     EUDEndWhile()
 
+def OnNewBuilding(xmin,ymin,width,height):
+    for deltaX in EUDLoopRange(width):
+        for deltaY in EUDLoopRange(height):
+            f_simpleprint(xmin, deltaX, ymin, deltaY)
+            tileDBforInGame[(xmin+deltaX) + (ymin+deltaY)*mapsize[0]] |= 0x04
+def OnDestroyBuilding(xmin,ymin,width,height):
+    for deltaX in EUDLoopRange(width):
+        for deltaY in EUDLoopRange(height):
+            f_simpleprint(xmin, deltaX, ymin, deltaY)
+            tileDBforInGame[(xmin+deltaX) + (ymin+deltaY)*mapsize[0]] &= ~0x04
 # tildDB bit info
 # 0x01 : 지형이 허용이 되는가? (허용되면 1, 허용되지않으면 0)
 # 0x02 : 자원필드가 있어 특정건물(커맨드센터,해처리,넥서스)을 지을 수 없는 타일인가?(자원필드범위가 있으면 1, 없으면 0)
-# 0x04 : 
+# 0x04 : 건물이 이미 지어져있는가? (지어져있으면 1, 없으면 0)
 def init():
     # CV5 파일분석
     f = open('tileset/jungle.cv5','rb')
@@ -115,31 +132,6 @@ def init():
         # if tempPrintCount > 0:
         #     tempPrintCount-=1
         #     print(buildable)
-        '''
-        # minitile까지 고려한 buildable 검사
-        megaTile References
-        tileIndex = tileSet[megaTileIndex]
-        miniTileInfos = tileVF4[tileIndex]
-
-        megaTileBuildable = True
-        for j in range(0,32,2):
-            minitileInfoByteArray = miniTileInfos[j:j+2]
-            minitileInfo = int.from_bytes(minitileInfoByteArray,byteorder='little',signed=False)
-            if (minitileInfo & 0x01) == 0:
-                megaTileBuildable = False
-                break
-
-        if tempPrintCount > 0:
-            tempPrintCount-=1
-            print("megaTileIndex = ",megaTileIndex, "index = ", tileIndex, "len = ", len(miniTileInfos))
-            print(miniTileInfos)
-            print(megaTileBuildable)
-        mapTileIndex = i >> 1
-        if buildable:
-            tileDB[mapTileIndex] |= 0x01
-        else:
-            tileDB[mapTileIndex] &= ~0x01
-        '''
     # 자원필드 정보초기화
     for i in range(0, len(UNIT), UNIT_STRUCT_SIZE):
         unitID = int.from_bytes(UNIT[i+8:i+10],byteorder='little',signed=False)

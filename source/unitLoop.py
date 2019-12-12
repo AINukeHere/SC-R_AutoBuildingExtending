@@ -1,5 +1,6 @@
 from eudplib import *
 import BuildingInfo
+from TileManager import OnNewBuilding, OnDestroyBuilding
 
 newCUnit = EUDArray(1700 * 336)
 epd2newCUnit = EPD(newCUnit) - EPD(0x59CCA8)
@@ -20,14 +21,18 @@ def main():
             (unitType == EncodeUnit('Vespene Geyser'))
             ())
 
-            unitPosX_EPD = epd + 0x28
-            unitPosY_EPD = epd + 0x2A
-            unitPosX = f_wread_epd(unitPosX_EPD,0)
-            unitPosY = f_wread_epd(unitPosY_EPD,3)
-
-            f_simpleprint('groundedBuilding')
-            f_simpleprint(unitType, unitPosX, unitPosY, BuildingInfo.GetBuildSizeX(unitType), BuildingInfo.GetBuildSizeY(unitType))
+            f_simpleprint('New Ground Building')
+            unitPosX_EPD = epd + 0x28 //4
+            unitPosY_EPD = epd + 0x2A //4
+            unitPosX = f_wread_epd(unitPosX_EPD, 0)
+            unitPosY = f_wread_epd(unitPosY_EPD, 2)
             buildSizeX = BuildingInfo.GetBuildSizeX(unitType)
+            buildSizeY = BuildingInfo.GetBuildSizeY(unitType)
+            buildingXmin = (unitPosX // 32) - buildSizeX // 2
+            buildingYmin = (unitPosY // 32) - buildSizeY // 2
+            OnNewBuilding(buildingXmin,buildingYmin,buildSizeX,buildSizeY)
+                    
+
         EUDEndIf()
         #f_simpleprint('newUnit')
 
@@ -37,12 +42,20 @@ def main():
         statusFlags = epd + 0xDC //4
         
         # 유닛이 파괴되었을 경우
-        # if EUDIf()(EUDSCAnd()(MemoryEPD(csprite, AtLeast, 1))(MemoryXEPD(orderID, Exactly, 0, 0x0000FF00))()):
-        # f_simpleprint('DeadCheck')
-        if EUDIf()(MemoryXEPD(orderID, Exactly, 0, 0x0000FF00)):
-            if EUDIf()(MemoryXEPD(statusFlags, AtLeast, 1, 2)):
-                f_simpleprint('Dead')
-            EUDEndIf()
+        if EUDIf()(EUDSCAnd()
+        (MemoryXEPD(orderID, Exactly, 0, 0x0000FF00))
+        (MemoryXEPD(statusFlags, AtLeast, 1, 2))()
+        ):
+                f_simpleprint('Destory Ground Building')
+                unitPosX_EPD = epd + 0x28 //4
+                unitPosY_EPD = epd + 0x2A //4
+                unitPosX = f_wread_epd(unitPosX_EPD, 0)
+                unitPosY = f_wread_epd(unitPosY_EPD, 2)
+                buildSizeX = BuildingInfo.GetBuildSizeX(unitType)
+                buildSizeY = BuildingInfo.GetBuildSizeY(unitType)
+                buildingXmin = (unitPosX // 32) - buildSizeX // 2
+                buildingYmin = (unitPosY // 32) - buildSizeY // 2
+                OnDestroyBuilding(buildingXmin,buildingYmin,buildSizeX,buildSizeY)
         EUDEndIf()
 
 
