@@ -1,5 +1,7 @@
 [main]
-input:  basemap/all_dirt.scx
-output: basemap/all_dirt_out.scx
+//input:  basemap/all_dirt.scx
+//output: basemap/all_dirt_out.scx
+input:  basemap/투혼.scx
+output: basemap/투혼_out.scx
 
-[main.py]
+[source/main.py]
