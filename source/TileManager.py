@@ -80,12 +80,10 @@ def VisualizingTileDB(start,end):
 def OnNewBuilding(xmin,ymin,width,height):
     for deltaX in EUDLoopRange(width):
         for deltaY in EUDLoopRange(height):
-            f_simpleprint(xmin, deltaX, ymin, deltaY)
             tileDBforInGame[(xmin+deltaX) + (ymin+deltaY)*mapsize[0]] |= 0x04
 def OnDestroyBuilding(xmin,ymin,width,height):
     for deltaX in EUDLoopRange(width):
         for deltaY in EUDLoopRange(height):
-            f_simpleprint(xmin, deltaX, ymin, deltaY)
             tileDBforInGame[(xmin+deltaX) + (ymin+deltaY)*mapsize[0]] &= ~0x04
 # tildDB bit info
 # 0x01 : 지형이 허용이 되는가? (허용되면 1, 허용되지않으면 0)

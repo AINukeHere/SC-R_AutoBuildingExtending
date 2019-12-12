@@ -58,6 +58,35 @@ def main():
                 OnDestroyBuilding(buildingXmin,buildingYmin,buildSizeX,buildSizeY)
         EUDEndIf()
 
+        # Test code
+        unitTypeEPD = epd + 0x64 // 4
+        playerID = epd + 0x4C // 4
+        if EUDIf()(EUDSCAnd()
+        (MemoryEPD(unitTypeEPD, Exactly, EncodeUnit('Terran SCV')))
+        (MemoryXEPD(playerID, Exactly, 0, 0xFF))
+        ()
+        ):
+            orderID = epd + 0x4D // 4
+            unitPosX_EPD = epd + 0x28 //4
+            unitPosY_EPD = epd + 0x2A //4
+            unitPosX = f_wread_epd(unitPosX_EPD, 0)
+            unitPosY = f_wread_epd(unitPosY_EPD, 2)
+            orderIDValue = f_wread_epd(orderID, 0x4D % 4)
+            f_simpleprint(unitPosX,unitPosY,orderIDValue)
+            if EUDIf()(MemoryXEPD(orderID, Exactly, 0x00000300, 0x0000FF00)):
+                f_simpleprint('go work!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+                DoActions([
+                    SetMemoryEPD(epd+0x58 // 4, SetTo, 109*32 + 7*32*65536),
+                    SetMemoryEPD(epd+0x98 // 4, SetTo, 14942208 + EncodeUnit('Terran Supply Depot')),
+                    SetMemoryEPD(epd+0x4C // 4, SetTo, 0 + 30*256),
+                    # SetMemory(ptr+0x58, SetTo, 109*32 + 7*32*65536),
+                    # SetMemory(ptr+0x98, SetTo, 14942208 + EncodeUnit('Terran Supply Depot')),
+                    # SetMemory(ptr+0x4C, SetTo, 0 + 30*256),
+                ])
+            EUDEndIf()
+        EUDEndIf()
+
+
 
 def LoopNewUnit(allowance=2):
     firstUnitPtr = EPD(0x628430)
