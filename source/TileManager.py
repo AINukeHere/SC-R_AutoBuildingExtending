@@ -85,6 +85,9 @@ def OnDestroyBuilding(xmin,ymin,width,height):
     for deltaX in EUDLoopRange(width):
         for deltaY in EUDLoopRange(height):
             tileDBforInGame[(xmin+deltaX) + (ymin+deltaY)*mapsize[0]] &= ~0x04
+
+def GetBuildPosition(searchStartPosX,searchStartPosY):
+    return searchStartPosX,searchStartPosY
 # tildDB bit info
 # 0x01 : 지형이 허용이 되는가? (허용되면 1, 허용되지않으면 0)
 # 0x02 : 자원필드가 있어 특정건물(커맨드센터,해처리,넥서스)을 지을 수 없는 타일인가?(자원필드범위가 있으면 1, 없으면 0)
