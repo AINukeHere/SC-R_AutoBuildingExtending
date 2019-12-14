@@ -6,6 +6,7 @@ newCUnit = EUDArray(1700 * 336)
 epd2newCUnit = EPD(newCUnit) - EPD(0x59CCA8)
 
 def main():
+    # 새로운유닛루프를 돌면서 건물이 지어지면 타일DB 업데이트
     for ptr,epd in LoopNewUnit():
         statusFlags = epd + 0xDC //4
         unitTypeEPD = epd + 0x64 // 4
@@ -21,7 +22,7 @@ def main():
             (unitType == EncodeUnit('Vespene Geyser'))
             ())
 
-            f_simpleprint('New Ground Building')
+            #f_simpleprint('New Ground Building')
             unitPosX_EPD = epd + 0x28 //4
             unitPosY_EPD = epd + 0x2A //4
             unitPosX = f_wread_epd(unitPosX_EPD, 0)
@@ -64,8 +65,7 @@ def main():
         if EUDIf()(EUDSCAnd()
         (MemoryEPD(unitTypeEPD, Exactly, EncodeUnit('Terran SCV')))
         (MemoryXEPD(playerID, Exactly, 0, 0xFF))
-        ()
-        ):
+        ()):
             orderID = epd + 0x4D // 4
             unitPosX_EPD = epd + 0x28 //4
             unitPosY_EPD = epd + 0x2A //4

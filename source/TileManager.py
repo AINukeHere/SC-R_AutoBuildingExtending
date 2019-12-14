@@ -1,4 +1,5 @@
 from eudplib import *
+from BuildingInfo import GetBuildSizeX, GetBuildSizeY
 
 chkt = GetChkTokenized()
 MTXM = bytearray(chkt.getsection('MTXM'))
@@ -86,8 +87,61 @@ def OnDestroyBuilding(xmin,ymin,width,height):
         for deltaY in EUDLoopRange(height):
             tileDBforInGame[(xmin+deltaX) + (ymin+deltaY)*mapsize[0]] &= ~0x04
 
-def GetBuildPosition(searchStartPosX,searchStartPosY):
-    return searchStartPosX,searchStartPosY
+# 특정위치로부터 특정 건물을 건설할 지점을 계산하여 반환합니다.
+@EUDFunc
+def GetBuildPosition(building, searchStartPosX, searchStartPosY, findingDepth):
+    buildingWidth = GetBuildSizeX(building)
+    buildingHeight = GetBuildSizeY(building)
+    searchStartTilePosX = (searchStartPosX // 32)
+    searchStartTilePosY = (searchStartPosY // 32)
+    #f_simpleprint('buildingWidth : ', buildingWidth)
+    result = EUDVariable(1)
+    deltaX = EUDVariable(-1)
+    if EUDIf()(buildingWidth == 4):
+        deltaX << -2
+    EUDEndIf()
+    # 여기부터 tileDB를 보고 건설가능한지 체크합니다.
+    tileFindingDepth = EUDVariable(0) # 원위치로부터 얼마나 떨어진 곳에서 조사를 할것인지에 대한 변수
+    
+    for x in EUDLoopRange(buildingWidth):
+        for y in EUDLoopRange(buildingHeight):
+            curCheckX = searchStartTilePosX+x+deltaX
+            curCheckY = searchStartTilePosY+y-1
+            #f_simpleprint('check here ',curCheckX,curCheckY, tileDBforInGame[curCheckX + (curCheckY)*mapsize[0]])
+            DoActions([
+                SetMemory(0x58DC60, SetTo, curCheckX*32),
+                SetMemory(0x58DC64, SetTo, curCheckY*32),
+                SetMemory(0x58DC68, SetTo, curCheckX*32+32),
+                SetMemory(0x58DC6C, SetTo, curCheckY*32+32),
+                CreateUnit(1,"Zerg Scourge","Location 0", P1),
+                KillUnit(EncodeUnit("Zerg Scourge"),P1),
+            ])
+            if EUDIf()(EUDSCOr()
+            ( (tileDBforInGame[curCheckX + curCheckY*mapsize[0]] & 0x01) == 0) # 건설가능한 지형이 아니거나
+            ( (tileDBforInGame[curCheckX + curCheckY*mapsize[0]] & 0x04) == 1) # 이미 지어진 건물자리라면
+            ()):
+                f_simpleprint('cant build here', curCheckX, (curCheckY),'value=',tileDBforInGame[curCheckX + (curCheckY)*mapsize[0]])
+                result << 0
+                #EUDBreak()
+            EUDEndIf()
+
+    #f_simpleprint('result = ', result)
+    if EUDIf()(result == 1):
+        #f_simpleprint('return : ', searchStartTilePosX*32 + 16,searchStartTilePosY*32)
+        finalBuildPosX = searchStartTilePosX*32
+        finalBuildPosY = searchStartTilePosY*32
+        if EUDIf()(buildingWidth == 3):
+            finalBuildPosX += 16
+        EUDEndIf()
+        if EUDIf()(buildingHeight == 3):
+            finalBuildPosY += 16
+        EUDEndIf()
+        EUDReturn(finalBuildPosX,finalBuildPosY)
+    EUDEndIf()
+    #f_simpleprint('fault return')
+    EUDReturn(-1,-1)
+
+
 # tildDB bit info
 # 0x01 : 지형이 허용이 되는가? (허용되면 1, 허용되지않으면 0)
 # 0x02 : 자원필드가 있어 특정건물(커맨드센터,해처리,넥서스)을 지을 수 없는 타일인가?(자원필드범위가 있으면 1, 없으면 0)
