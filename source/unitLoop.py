@@ -47,7 +47,7 @@ def main():
         (MemoryXEPD(orderID, Exactly, 0, 0x0000FF00))
         (MemoryXEPD(statusFlags, AtLeast, 1, 2))()
         ):
-                f_simpleprint('Destory Ground Building')
+                #f_simpleprint('Destory Ground Building')
                 unitPosX_EPD = epd + 0x28 //4
                 unitPosY_EPD = epd + 0x2A //4
                 unitPosX = f_wread_epd(unitPosX_EPD, 0)

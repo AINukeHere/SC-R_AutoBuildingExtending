@@ -21,7 +21,7 @@ class CJob(EUDStruct):
         self.buildPosX = buildPosX
         self.buildPosY = buildPosY
         self.isBuildStart = 0
-        f_simpleprint('Created Job',builderEPD,buildType,buildPosX,buildPosY,self.isBuildStart)
+        #f_simpleprint('Created Job',builderEPD,buildType,buildPosX,buildPosY,self.isBuildStart)
     @EUDMethod
     def updateJobInfo(self, builderEPD, buildType, buildPosX, buildPosY):
         self.builderEPD = builderEPD

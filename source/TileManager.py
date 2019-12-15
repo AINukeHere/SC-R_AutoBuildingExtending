@@ -101,44 +101,59 @@ def GetBuildPosition(building, searchStartPosX, searchStartPosY, findingDepth):
         deltaX << -2
     EUDEndIf()
     # 여기부터 tileDB를 보고 건설가능한지 체크합니다.
-    tileFindingDepth = EUDVariable(0) # 원위치로부터 얼마나 떨어진 곳에서 조사를 할것인지에 대한 변수
-    
-    for x in EUDLoopRange(buildingWidth):
-        for y in EUDLoopRange(buildingHeight):
-            curCheckX = searchStartTilePosX+x+deltaX
-            curCheckY = searchStartTilePosY+y-1
-            #f_simpleprint('check here ',curCheckX,curCheckY, tileDBforInGame[curCheckX + (curCheckY)*mapsize[0]])
-            DoActions([
-                SetMemory(0x58DC60, SetTo, curCheckX*32),
-                SetMemory(0x58DC64, SetTo, curCheckY*32),
-                SetMemory(0x58DC68, SetTo, curCheckX*32+32),
-                SetMemory(0x58DC6C, SetTo, curCheckY*32+32),
-                CreateUnit(1,"Zerg Scourge","Location 0", P1),
-                KillUnit(EncodeUnit("Zerg Scourge"),P1),
-            ])
-            if EUDIf()(EUDSCOr()
-            ( (tileDBforInGame[curCheckX + curCheckY*mapsize[0]] & 0x01) == 0) # 건설가능한 지형이 아니거나
-            ( (tileDBforInGame[curCheckX + curCheckY*mapsize[0]] & 0x04) == 1) # 이미 지어진 건물자리라면
-            ()):
-                f_simpleprint('cant build here', curCheckX, (curCheckY),'value=',tileDBforInGame[curCheckX + (curCheckY)*mapsize[0]])
-                result << 0
-                #EUDBreak()
-            EUDEndIf()
+    curSearchingDepth = EUDVariable(0) # 원위치로부터 얼마나 떨어진 곳에서 조사를 할것인지에 대한 변수
+    curSearchingDepth << 0
+    curSearchTilePosX, curSearchTilePosY, curCheckX, curCheckY, finalBuildPosX, finalBuildPosY = EUDCreateVariables(6) # 타일조사에 관한 변수.
+    if EUDWhile()(curSearchingDepth < findingDepth):
+        for xmin in range(-1,2):
+            for ymin in range(-1,2):
+                
+                curSearchTilePosX << searchStartTilePosX + curSearchingDepth*xmin
+                curSearchTilePosY << searchStartTilePosY + curSearchingDepth*ymin
+                result << 1
+                for buildTileX in EUDLoopRange(buildingWidth):
+                    for buildTileY in EUDLoopRange(buildingHeight):
+                        curCheckX << curSearchTilePosX + buildTileX + deltaX
+                        curCheckY << curSearchTilePosY + buildTileY - 1
+                        # 디버깅을 위한 시각화 코드
+                        f_simpleprint('check here ',curCheckX,curCheckY, tileDBforInGame[curCheckX + (curCheckY)*mapsize[0]])
+                        DoActions([
+                            SetMemory(0x58DC60, SetTo, curCheckX*32),
+                            SetMemory(0x58DC64, SetTo, curCheckY*32),
+                            SetMemory(0x58DC68, SetTo, curCheckX*32+32),
+                            SetMemory(0x58DC6C, SetTo, curCheckY*32+32),
+                            CreateUnit(1,"Zerg Scourge","Location 0", P1),
+                            KillUnit(EncodeUnit("Zerg Scourge"),P1),
+                        ])
+                        if EUDIf()(EUDSCOr()
+                        ( (tileDBforInGame[curCheckX + curCheckY*mapsize[0]] & 0x01) == 0) # 건설가능한 지형이 아니거나
+                        ( (tileDBforInGame[curCheckX + curCheckY*mapsize[0]] & 0x04) != 0) # 이미 지어진 건물자리이거나
+                        ( curCheckX >= mapsize[0])( curCheckY >= mapsize[1]) # 맵밖을 검사하거나
+                        ()):
+                            #f_simpleprint('cant build here', curCheckX, (curCheckY),'value=',tileDBforInGame[curCheckX + (curCheckY)*mapsize[0]])
+                            result << 0
+                            EUDBreak()
+                        EUDEndIf()
+                if EUDIf()(result == 1):
+                    EUDBreak()
+                EUDEndIf()
+        curSearchingDepth += 2
+    EUDEndWhile()
 
     #f_simpleprint('result = ', result)
-    if EUDIf()(result == 1):
-        #f_simpleprint('return : ', searchStartTilePosX*32 + 16,searchStartTilePosY*32)
-        finalBuildPosX = searchStartTilePosX*32
-        finalBuildPosY = searchStartTilePosY*32
+    if EUDIf()(curSearchingDepth < findingDepth):
+        finalBuildPosX << curSearchTilePosX*32
+        finalBuildPosY << curSearchTilePosY*32
         if EUDIf()(buildingWidth == 3):
             finalBuildPosX += 16
         EUDEndIf()
         if EUDIf()(buildingHeight == 3):
             finalBuildPosY += 16
         EUDEndIf()
+        f_simpleprint('return : ', finalBuildPosX, finalBuildPosY)
         EUDReturn(finalBuildPosX,finalBuildPosY)
     EUDEndIf()
-    #f_simpleprint('fault return')
+    f_simpleprint('fault return')
     EUDReturn(-1,-1)
 
 

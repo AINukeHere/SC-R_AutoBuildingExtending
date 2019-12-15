@@ -9,9 +9,7 @@ jobIndex = EUDVariable()
 def init():
     for i in EUDLoopRange(0,JOB_MAX):
         jobs[i] = CJob.alloc(0,0,0,0)
-    for i in EUDLoopRange(0,10):
-        CJob.cast(jobs[i]).isBuildStart = i
-        f_simpleprint(CJob.cast(jobs[i]).isBuildStart)
+        CJob.cast(jobs[i]).isBuildStart = 1
 @EUDFunc
 def CreateJob(buildType, searchStartPosX, searchStartPosY):
     global jobIndex
