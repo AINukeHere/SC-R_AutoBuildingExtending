@@ -137,7 +137,7 @@ def GetBuildPosition(building, searchStartPosX, searchStartPosY, findingDepth):
                 if EUDIf()(result == 1):
                     EUDBreak()
                 EUDEndIf()
-        curSearchingDepth += 2
+        curSearchingDepth += 1
     EUDEndWhile()
 
     #f_simpleprint('result = ', result)

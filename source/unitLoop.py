@@ -5,13 +5,17 @@ from TileManager import OnNewBuilding, OnDestroyBuilding
 newCUnit = EUDArray(1700 * 336)
 epd2newCUnit = EPD(newCUnit) - EPD(0x59CCA8)
 
+DeathFlag = EUDArray(1700)
 def main():
     # 새로운유닛루프를 돌면서 건물이 지어지면 타일DB 업데이트
     for ptr,epd in LoopNewUnit():
         statusFlags = epd + 0xDC //4
-        unitTypeEPD = epd + 0x64 // 4
         unitType = -1
         if EUDIf()(MemoryXEPD(statusFlags, AtLeast, 1, 2)):
+            unitTypeEPD = epd + 0x64 // 4
+            #unused_0x8C
+            deathFlag = epd + 0x8C // 4
+            DoActions(SetMemoryXEPD(deathFlag,SetTo, 0,0xFFFF))
             unitType = f_dwread_epd(unitTypeEPD)
 
             # 광물지대도 인식되어버리므로 예외처리
@@ -22,7 +26,7 @@ def main():
             (unitType == EncodeUnit('Vespene Geyser'))
             ())
 
-            #f_simpleprint('New Ground Building')
+            f_simpleprint('New Ground Building')
             unitPosX_EPD = epd + 0x28 //4
             unitPosY_EPD = epd + 0x2A //4
             unitPosX = f_wread_epd(unitPosX_EPD, 0)
@@ -39,15 +43,18 @@ def main():
 
     for ptr, epd in EUDLoopUnit2():
         orderID = epd + 0x4D // 4
-        csprite = epd + 0x0C // 4
         statusFlags = epd + 0xDC //4
+        #unused_0x8C
+        deathFlag = epd + 0x8C // 4
         
         # 유닛이 파괴되었을 경우
         if EUDIf()(EUDSCAnd()
         (MemoryXEPD(orderID, Exactly, 0, 0x0000FF00))
-        (MemoryXEPD(statusFlags, AtLeast, 1, 2))()
-        ):
-                #f_simpleprint('Destory Ground Building')
+        (MemoryXEPD(statusFlags, AtLeast, 1, 2))
+        ()):
+            if EUDIfNot()(MemoryXEPD(deathFlag,Exactly, 1, 0xFFFF)):
+                DoActions(SetMemoryXEPD(deathFlag,SetTo, 1,0xFFFF))
+                f_simpleprint('Destory Ground Building')
                 unitPosX_EPD = epd + 0x28 //4
                 unitPosY_EPD = epd + 0x2A //4
                 unitPosX = f_wread_epd(unitPosX_EPD, 0)
@@ -57,6 +64,7 @@ def main():
                 buildingXmin = (unitPosX // 32) - buildSizeX // 2
                 buildingYmin = (unitPosY // 32) - buildSizeY // 2
                 OnDestroyBuilding(buildingXmin,buildingYmin,buildSizeX,buildSizeY)
+            EUDEndIf()
         EUDEndIf()
 
         # Test code

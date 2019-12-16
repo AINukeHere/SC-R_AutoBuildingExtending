@@ -8,8 +8,8 @@ jobIndex = EUDVariable()
 
 def init():
     for i in EUDLoopRange(0,JOB_MAX):
-        jobs[i] = CJob.alloc(0,0,0,0)
-        CJob.cast(jobs[i]).isBuildStart = 1
+        jobs[i] = CJob.alloc(0,0,0,0,0)
+        CJob.cast(jobs[i]).jobState = 0
 @EUDFunc
 def CreateJob(buildType, searchStartPosX, searchStartPosY):
     global jobIndex
@@ -21,7 +21,7 @@ def CreateJob(buildType, searchStartPosX, searchStartPosY):
         EUDReturn()
     EUDEndIf()
     for i in EUDLoopRange(0,JOB_MAX):
-        if EUDIf()(CJob.cast(jobs[i]).isBuildStart != 0):
+        if EUDIf()(CJob.cast(jobs[i]).jobState == 0):
             f_simpleprint('find empty job index : ', i)
             CJob.cast(jobs[i]).updateJobInfo(EPD(0x59CCA8), buildType, buildPosX, buildPosY)
             EUDReturn()
