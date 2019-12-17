@@ -1,5 +1,10 @@
 from eudplib import *
 
+import TileManager
+
+JOB_STATE_EMPTY = 0 # 작업이 끝나서 비어있는 상태.
+JOB_STATE_FIND_SCV = 1 # 건물건설요청을 받아 건설할 SCV를 찾는 상태
+JOB_STATE_BUILD = 2 # 건설할SCV가 정해져 건물을 지으러가는 상태
 class CJob(EUDStruct):
     _fields_ = [
         'builderEPD',
@@ -7,6 +12,7 @@ class CJob(EUDStruct):
         'buildPosX',
         'buildPosY',
         'jobState',
+        'minDist',
     ]
     # def __init__(self, builderEPD, buildType):
     #     if isinstance(builderEPD, int):
@@ -21,6 +27,7 @@ class CJob(EUDStruct):
         self.buildPosX = buildPosX
         self.buildPosY = buildPosY
         self.jobState = jobState
+        self.minDist = 0x7FFFFFFF
         #f_simpleprint('Created Job',builderEPD,buildType,buildPosX,buildPosY,self.jobState)
     @EUDMethod
     def updateJobInfo(self, builderEPD, buildType, buildPosX, buildPosY):
@@ -28,14 +35,18 @@ class CJob(EUDStruct):
         self.buildType = buildType
         self.buildPosX = buildPosX
         self.buildPosY = buildPosY
-        self.jobState = 1
-        f_simpleprint('Updated Job',builderEPD,buildType,buildPosX,buildPosY,self.jobState)
+        self.jobState = JOB_STATE_FIND_SCV
+        self.minDist = 0x7FFFFFFF
+        TileManager.requestBuildArea(buildType,buildPosX,buildPosY, True)
+        #f_simpleprint('Updated Job',builderEPD, buildType, buildPosX, buildPosY)
     @EUDMethod
     def update(self):
         EUDSwitch(self.jobState)
-        if EUDSwitchCase()(0):
+        if EUDSwitchCase()(JOB_STATE_EMPTY):
             EUDReturn()
-        if EUDSwitchCase()(1):
+        if EUDSwitchCase()(JOB_STATE_FIND_SCV):
+            EUDBreak()
+        if EUDSwitchCase()(JOB_STATE_BUILD):
             if EUDIf()(self.jobState != 0):
                 orderID = self.builderEPD + 0x4D // 4
                 unitPosX_EPD = self.builderEPD + 0x28 //4
@@ -59,7 +70,8 @@ class CJob(EUDStruct):
                     (orderIDValue == 0) # SCV의 orderID가 0인경우 (파괴된 경우)
                     ()):
                     f_simpleprint('Job Finished')
-                    self.jobState = 0
+                    self.jobState = JOB_STATE_EMPTY
+                    TileManager.requestBuildArea(self.buildType,self.buildPosX,self.buildPosY,False)
                 EUDEndIf()
             EUDEndIf()
             EUDBreak()

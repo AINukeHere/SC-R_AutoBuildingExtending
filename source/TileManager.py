@@ -63,6 +63,10 @@ def VisualizingTileDB(start,end):
             DoActions([
                 CreateUnit(1,"Gui Montag","Location 0", P1),
             ])
+        if EUDElseIf()((tileDBforInGame[i] & 0x08) != 0):
+            DoActions([
+                CreateUnit(1,"Samir Duran","Location 0", P1),
+            ])
         if EUDElseIf()((tileDBforInGame[i] & 0x01) != 0):
             DoActions([
                 CreateUnit(1,"Jim Raynor (Marine)","Location 0", P1),
@@ -74,6 +78,7 @@ def VisualizingTileDB(start,end):
             KillUnit(EncodeUnit("Jim Raynor (Marine)"),P1),
             KillUnit(EncodeUnit("Gui Montag"),P1),
             KillUnit(EncodeUnit("Zerg Scourge"),P1),
+            KillUnit(EncodeUnit("Samir Duran"),P1),
         ])
         i+=1
     EUDEndWhile()
@@ -82,10 +87,42 @@ def OnNewBuilding(xmin,ymin,width,height):
     for deltaX in EUDLoopRange(width):
         for deltaY in EUDLoopRange(height):
             tileDBforInGame[(xmin+deltaX) + (ymin+deltaY)*mapsize[0]] |= 0x04
+            tileDBforInGame[(xmin+deltaX) + (ymin+deltaY)*mapsize[0]] &= ~0x08
 def OnDestroyBuilding(xmin,ymin,width,height):
     for deltaX in EUDLoopRange(width):
         for deltaY in EUDLoopRange(height):
             tileDBforInGame[(xmin+deltaX) + (ymin+deltaY)*mapsize[0]] &= ~0x04
+            #f_simpleprint(xmin+deltaX,ymin+deltaY)
+
+# 여기에 지을거니까 영역표시점
+def requestBuildArea(buildingID,posX,posY, isBuild):
+    buildingWidth = GetBuildSizeX(buildingID)
+    buildingHeight = GetBuildSizeY(buildingID)
+    checkedTilePosX, checkedTilePosY,curCheckX,curCheckY = EUDCreateVariables(4)
+    checkedTilePosX << posX
+    checkedTilePosY << posY
+    if EUDIf()(buildingWidth == 3):
+        checkedTilePosX << posX - 16
+    EUDEndIf()
+    if EUDIf()(buildingHeight == 3):
+        checkedTilePosY << posY - 16
+    EUDEndIf()
+    checkedTilePosX = checkedTilePosX // 32
+    checkedTilePosY = checkedTilePosY // 32
+
+    deltaX = EUDVariable(-1)
+    if EUDIf()(buildingWidth == 4):
+        deltaX << -2
+    EUDEndIf()
+
+    for buildTileX in EUDLoopRange(buildingWidth):
+        for buildTileY in EUDLoopRange(buildingHeight):
+            curCheckX << checkedTilePosX + buildTileX + deltaX
+            curCheckY << checkedTilePosY + buildTileY - 1
+            if EUDIf()(isBuild):
+                tileDBforInGame[curCheckX + curCheckY*mapsize[0]] |= 0x08
+            EUDEndIf()
+
 
 # 특정위치로부터 특정 건물을 건설할 지점을 계산하여 반환합니다.
 @EUDFunc
@@ -116,18 +153,21 @@ def GetBuildPosition(building, searchStartPosX, searchStartPosY, findingDepth):
                         curCheckX << curSearchTilePosX + buildTileX + deltaX
                         curCheckY << curSearchTilePosY + buildTileY - 1
                         # 디버깅을 위한 시각화 코드
-                        f_simpleprint('check here ',curCheckX,curCheckY, tileDBforInGame[curCheckX + (curCheckY)*mapsize[0]])
+                        # f_simpleprint('check here ',curCheckX,curCheckY, tileDBforInGame[curCheckX + (curCheckY)*mapsize[0]])
                         DoActions([
                             SetMemory(0x58DC60, SetTo, curCheckX*32),
                             SetMemory(0x58DC64, SetTo, curCheckY*32),
                             SetMemory(0x58DC68, SetTo, curCheckX*32+32),
                             SetMemory(0x58DC6C, SetTo, curCheckY*32+32),
-                            CreateUnit(1,"Zerg Scourge","Location 0", P1),
-                            KillUnit(EncodeUnit("Zerg Scourge"),P1),
+                            # CreateUnit(1,"Zerg Scourge","Location 0", P1),
+                            # KillUnit(EncodeUnit("Zerg Scourge"),P1),
+                            # CreateUnit(1,"Khalis Crystal","Location 0", P1),
+                            # KillUnit(EncodeUnit("Khalis Crystal"),P1),
                         ])
                         if EUDIf()(EUDSCOr()
                         ( (tileDBforInGame[curCheckX + curCheckY*mapsize[0]] & 0x01) == 0) # 건설가능한 지형이 아니거나
                         ( (tileDBforInGame[curCheckX + curCheckY*mapsize[0]] & 0x04) != 0) # 이미 지어진 건물자리이거나
+                        ( (tileDBforInGame[curCheckX + curCheckY*mapsize[0]] & 0x08) != 0) # 지을 예정인 자리이거나
                         ( curCheckX >= mapsize[0])( curCheckY >= mapsize[1]) # 맵밖을 검사하거나
                         ()):
                             #f_simpleprint('cant build here', curCheckX, (curCheckY),'value=',tileDBforInGame[curCheckX + (curCheckY)*mapsize[0]])
@@ -161,6 +201,7 @@ def GetBuildPosition(building, searchStartPosX, searchStartPosY, findingDepth):
 # 0x01 : 지형이 허용이 되는가? (허용되면 1, 허용되지않으면 0)
 # 0x02 : 자원필드가 있어 특정건물(커맨드센터,해처리,넥서스)을 지을 수 없는 타일인가?(자원필드범위가 있으면 1, 없으면 0)
 # 0x04 : 건물이 이미 지어져있는가? (지어져있으면 1, 없으면 0)
+# 0x08 : 건물을 지을 예정인가? (지을 예정이면 1, 아니면 0)
 def init():
     # CV5 파일분석
     f = open('tileset/jungle.cv5','rb')
@@ -202,6 +243,27 @@ def init():
         # if tempPrintCount > 0:
         #     tempPrintCount-=1
         #     print(buildable)
+
+        # minitile까지 고려한 buildable 검사
+        # megaTile References
+        tileIndex = tileSet[megaTileIndex]
+        miniTileInfos = tileVF4[tileIndex]
+        megaTileBuildable = True
+        for j in range(0,32,2):
+            minitileInfoByteArray = miniTileInfos[j:j+2]
+            minitileInfo = int.from_bytes(minitileInfoByteArray,byteorder='little',signed=False)
+            if (minitileInfo & 0x01) == 0:
+                megaTileBuildable = False
+                break
+        if tempPrintCount > 0:
+            tempPrintCount-=1
+            # print("megaTileIndex = ",megaTileIndex, "index = ", tileIndex, "len = ", len(miniTileInfos))
+            # print(miniTileInfos)
+            # print(megaTileBuildable)
+        mapTileIndex = i >> 1
+        if megaTileBuildable:
+            tileDB[mapTileIndex] |= 0x01
+
     # 자원필드 정보초기화
     for i in range(0, len(UNIT), UNIT_STRUCT_SIZE):
         unitID = int.from_bytes(UNIT[i+8:i+10],byteorder='little',signed=False)

@@ -23,13 +23,13 @@ def onPluginStart():
     p1_spY = f_wread_epd(P1_startPositionY,2)
     f_simpleprint("StartPosition : ", p1_spX,p1_spY)
 
-curTestIndex = EUDVariable(128*57)
+curTestIndex = EUDVariable(128*0)
 testSize = EUDVariable(16)
 def beforeTriggerExec():
     global curTestIndex, p1_spX, p1_spY
-    if EUDIf()(curTestIndex + testSize > 128*67):#TileManager.tileNum):
+    if EUDIf()(curTestIndex + testSize > 128*125):#TileManager.tileNum):
         #f_simpleprint('reset')
-        curTestIndex << 128*57
+        curTestIndex << 128*0
     EUDEndIf()
     TileManager.VisualizingTileDB(curTestIndex,curTestIndex+testSize)
     curTestIndex += testSize
