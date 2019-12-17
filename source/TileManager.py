@@ -121,6 +121,8 @@ def requestBuildArea(buildingID,posX,posY, isBuild):
             curCheckY << checkedTilePosY + buildTileY - 1
             if EUDIf()(isBuild):
                 tileDBforInGame[curCheckX + curCheckY*mapsize[0]] |= 0x08
+            if EUDElse()():
+                tileDBforInGame[curCheckX + curCheckY*mapsize[0]] &= ~0x08
             EUDEndIf()
 
 
@@ -134,6 +136,7 @@ def GetBuildPosition(building, searchStartPosX, searchStartPosY, findingDepth):
     #f_simpleprint('buildingWidth : ', buildingWidth)
     result = EUDVariable(1)
     deltaX = EUDVariable(-1)
+    deltaX << -1
     if EUDIf()(buildingWidth == 4):
         deltaX << -2
     EUDEndIf()
@@ -194,10 +197,10 @@ def GetBuildPosition(building, searchStartPosX, searchStartPosY, findingDepth):
         if EUDIf()(buildingHeight == 3):
             finalBuildPosY += 16
         EUDEndIf()
-        f_simpleprint('return : ', finalBuildPosX, finalBuildPosY)
+        #f_simpleprint('return : ', finalBuildPosX, finalBuildPosY)
         EUDReturn(finalBuildPosX,finalBuildPosY)
     EUDEndIf()
-    f_simpleprint('fault return')
+    f_simpleprint('cannot found build position')
     EUDReturn(-1,-1)
 
 
@@ -278,9 +281,11 @@ def init():
             tileDB[tileX-1 + tileY*mapsize[0]] &= ~0x01
             tileDB[tileX+0 + tileY*mapsize[0]] &= ~0x01
             # 자원주위 커맨드,해처리,넥서스 못지음
-            for y in range(-3,3):
+            for y in range(-3,4):
                 for x in range(-4,4):
-                    tileDB[tileX+x + (tileY+y)*mapsize[0]] |= 0x02
+                    finalX = max(min(tileX+x, mapsize[0]-1), 0)
+                    finalY = max(min(tileY+y, mapsize[1]-1), 0)
+                    tileDB[finalX + finalY*mapsize[0]] |= 0x02
                     #print('[',x,',',y,']')
             # 두번째줄
             # tileDB[tileX-4 + (tileY-3)*mapsize[0]] |= 0x02

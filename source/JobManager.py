@@ -69,7 +69,7 @@ def OnUnitLoopEnd():
         EUDContinueIfNot(curJob.jobState == JOB_STATE_FIND_SCV)
         assignedJobIndex = curJob.builderEPD + 0xE8 // 4
         # 작업이 배정되지 않은 경우
-        f_simpleprint(curJob.builderEPD, ' : ', f_dwread_epd(assignedJobIndex))
+        #f_simpleprint(curJob.builderEPD, ' : ', f_dwread_epd(assignedJobIndex))
         if EUDIf()(MemoryEPD(assignedJobIndex, Exactly, -1)):
             # 현재작업으로 배정
             DoActions(SetMemoryEPD(assignedJobIndex, SetTo, i))
