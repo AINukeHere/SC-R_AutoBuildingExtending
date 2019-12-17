@@ -169,6 +169,10 @@ def GetBuildPosition(building, searchStartPosX, searchStartPosY, findingDepth):
                         ( (tileDBforInGame[curCheckX + curCheckY*mapsize[0]] & 0x04) != 0) # 이미 지어진 건물자리이거나
                         ( (tileDBforInGame[curCheckX + curCheckY*mapsize[0]] & 0x08) != 0) # 지을 예정인 자리이거나
                         ( curCheckX >= mapsize[0])( curCheckY >= mapsize[1]) # 맵밖을 검사하거나
+                        ( EUDSCAnd()
+                            ( building == EncodeUnit('Terran Command Center') ) # 커맨드인데
+                            ( (tileDBforInGame[curCheckX + curCheckY*mapsize[0]] & 0x02) != 0) # 자원필드에 영향을 받으면
+                            ())
                         ()):
                             #f_simpleprint('cant build here', curCheckX, (curCheckY),'value=',tileDBforInGame[curCheckX + (curCheckY)*mapsize[0]])
                             result << 0
@@ -236,10 +240,6 @@ def init():
         megaTileRowIndex = int(megaTileIndex / 16)
         buildable = tileCV5[megaTileRowIndex][2] >> 4 == 0
         mapTileIndex = i >> 1
-        if buildable:
-            tileDB[mapTileIndex] |= 0x01
-        else:
-            tileDB[mapTileIndex] &= ~0x01
         # if tempPrintCount > 0:
         #     tempPrintCount-=1
         #     print(buildable)
@@ -261,8 +261,10 @@ def init():
             # print(miniTileInfos)
             # print(megaTileBuildable)
         mapTileIndex = i >> 1
-        if megaTileBuildable:
+        if buildable and megaTileBuildable:
             tileDB[mapTileIndex] |= 0x01
+        else:
+            tileDB[mapTileIndex] &= ~0x01
 
     # 자원필드 정보초기화
     for i in range(0, len(UNIT), UNIT_STRUCT_SIZE):

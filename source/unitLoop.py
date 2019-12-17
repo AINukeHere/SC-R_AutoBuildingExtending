@@ -15,7 +15,7 @@ def main():
             # secondaryOrderPosition // unused -> 배정된 Job 인덱스를 저장
             assignedJobIndex = epd + 0xE8 // 4
             DoActions(SetMemoryEPD(assignedJobIndex, SetTo, -1)) # 초기값 -1 (배정되지않음)
-            f_simpleprint('0xE8 = -1')
+            #f_simpleprint('0xE8 = -1')
         EUDEndIf()
 
         statusFlags = epd + 0xDC //4
