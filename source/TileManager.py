@@ -28,21 +28,6 @@ def InGameInit():
     for i in range(tileNum):
         tileDBforInGame[i] = tileDB[i]
 
-# 단일인덱스 출력. 안쓸거임
-# def VisualizingTileDB(idx):
-#     if EUDIf()(tileDBforInGame[idx] & 0x01) == 1:
-#         X = (idx%mapsize[0])*32
-#         Y = (idx//mapsize[0])*32
-
-#         DoActions([
-#             SetMemory(0x58DC60, SetTo, X),
-#             SetMemory(0x58DC64, SetTo, Y),
-#             SetMemory(0x58DC68, SetTo, X+32),
-#             SetMemory(0x58DC6C, SetTo, Y+32),
-#             CreateUnit(1,"Terran Marine","Location 0", P1),
-#         ])
-#     EUDEndIf()
-
 def VisualizingTileDB(start,end):
     i = EUDVariable()
     i << start
@@ -94,11 +79,11 @@ def OnDestroyBuilding(xmin,ymin,width,height):
             tileDBforInGame[(xmin+deltaX) + (ymin+deltaY)*mapsize[0]] &= ~0x04
             #f_simpleprint(xmin+deltaX,ymin+deltaY)
 
-# 여기에 지을거니까 영역표시점
+# 여기에 지을거임 (지을 예정이라는 표시를 함)
 def requestBuildArea(buildingID,posX,posY, isBuild):
     buildingWidth = GetBuildSizeX(buildingID)
     buildingHeight = GetBuildSizeY(buildingID)
-    checkedTilePosX, checkedTilePosY,curCheckX,curCheckY = EUDCreateVariables(4)
+    checkedTilePosX, checkedTilePosY, curCheckX, curCheckY = EUDCreateVariables(4)
     checkedTilePosX << posX
     checkedTilePosY << posY
     if EUDIf()(buildingWidth == 3):
@@ -204,7 +189,7 @@ def GetBuildPosition(building, searchStartPosX, searchStartPosY, findingDepth):
     EUDReturn(-1,-1)
 
 
-# tildDB bit info
+# tileDB bit info
 # 0x01 : 지형이 허용이 되는가? (허용되면 1, 허용되지않으면 0)
 # 0x02 : 자원필드가 있어 특정건물(커맨드센터,해처리,넥서스)을 지을 수 없는 타일인가?(자원필드범위가 있으면 1, 없으면 0)
 # 0x04 : 건물이 이미 지어져있는가? (지어져있으면 1, 없으면 0)
